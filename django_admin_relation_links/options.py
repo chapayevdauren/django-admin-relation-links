@@ -16,7 +16,7 @@ class AdminChangeLinksMixin():
 
     change_links = []
     changelist_links = []
-    auto_add_change_links_to_fields = True
+    auto_add_change_links_to_fields = False
 
     def __init__(self, *args, **kwargs):
         super(AdminChangeLinksMixin, self).__init__(*args, **kwargs)
@@ -133,7 +133,12 @@ class AdminChangeLinksMixin():
         return format_html('<a href="{}" class="changelink">{}</a>', url, label)
 
     def get_change_link(self, instance, field, options):
-        target_instance = getattr(instance, field)
+        is_self_pk = False
+        if instance._meta.get_field(field).primary_key:
+            is_self_pk = True
+            target_instance = instance  # link to self, may be useful for inline modeladmin
+        else:
+            target_instance = getattr(instance, field)
         return self.get_link_field(
             reverse(
                 '{}:{}_{}_change'.format(
@@ -143,7 +148,7 @@ class AdminChangeLinksMixin():
                 ),
                 args=[target_instance.pk]
             ),
-            target_instance
+            target_instance if not is_self_pk else getattr(instance, field)
         )
 
     def get_changelist_link(self, instance, relation_name, options):
