@@ -16,6 +16,7 @@ class AdminChangeLinksMixin():
 
     change_links = []
     changelist_links = []
+    auto_add_change_links_to_fields = True
 
     def __init__(self, *args, **kwargs):
         super(AdminChangeLinksMixin, self).__init__(*args, **kwargs)
@@ -24,30 +25,33 @@ class AdminChangeLinksMixin():
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
-        readonly_fields += [
-            field for _, field, _ in self.get_change_link_fields()
-            if field not in readonly_fields
-        ]
-        readonly_fields += [
-            field for _, field, _ in self.get_changelist_link_fields()
-            if field not in readonly_fields
-        ]
+        if self.auto_add_change_links_to_fields:
+            readonly_fields += [
+                field for _, field, _ in self.get_change_link_fields()
+                if field not in readonly_fields
+            ]
+            readonly_fields += [
+                field for _, field, _ in self.get_changelist_link_fields()
+                if field not in readonly_fields
+            ]
         return readonly_fields
 
     def get_fields(self, request, obj=None):
 
         fields = list(super().get_fields(request, obj))
 
-        if not fields:
-            return fields
+        if self.auto_add_change_links_to_fields:
 
-        for field, field_name, options in self.get_change_link_fields():
-            if field_name not in fields:
-                fields.append(field_name)
+            if not fields:
+                return fields
 
-        for relation_name, field_name, options in self.get_changelist_link_fields():
-            if field_name not in fields:
-                fields.append(field_name)
+            for field, field_name, options in self.get_change_link_fields():
+                if field_name not in fields:
+                    fields.append(field_name)
+
+            for relation_name, field_name, options in self.get_changelist_link_fields():
+                if field_name not in fields:
+                    fields.append(field_name)
 
         return fields
 
