@@ -132,6 +132,15 @@ class AdminChangeLinksMixin():
     def get_link_field(self, url, label):
         return format_html('<a href="{}" class="changelink">{}</a>', url, label)
 
+    def get_link_field_label(self, instance, target_instance, options):
+        if options.get('field_label'):
+            assert callable(options['field_label']), (
+                'field_label link option is supposed to be callable and accepting instance '
+                'as argument, but it is note'
+            )
+            return options['field_label'](instance)
+        return target_instance
+
     def get_change_link(self, instance, field, options):
         is_self_pk = False
         if instance._meta.get_field(field).primary_key:
@@ -148,7 +157,11 @@ class AdminChangeLinksMixin():
                 ),
                 args=[target_instance.pk]
             ),
-            target_instance if not is_self_pk else getattr(instance, field)
+            self.get_link_field_label(
+                instance,
+                target_instance if not is_self_pk else getattr(instance, field),
+                options,
+            )
         )
 
     def get_changelist_link(self, instance, relation_name, options):
