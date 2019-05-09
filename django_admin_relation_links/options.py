@@ -158,6 +158,8 @@ class AdminChangeLinksMixin():
 
     def get_change_link(self, instance, field, options):
         target_instance = self.get_target_instance(instance, field, options)
+        if not target_instance:
+            return None
         return self.get_link_field(
             reverse(
                 '{}:{}_{}_change'.format(
