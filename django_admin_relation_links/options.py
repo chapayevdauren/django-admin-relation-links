@@ -61,6 +61,16 @@ class AdminChangeLinksMixin():
             if field_name not in readonly_fields:
                 readonly_fields.append(field_name)
 
+    def get_short_description(self, field, options):
+        if options.get('label'):
+            return options['label']
+        if getattr(self.model, field, None):
+            field_descriptor = getattr(self.model, field)
+            field_instance = getattr(field_descriptor, 'field', None)
+            if field_instance and hasattr(field_instance, 'verbose_name'):
+                return field_instance.verbose_name
+        return '{}'.format(field.replace('_', ' '))
+
     def add_change_link(self, field, field_name, options):
 
         if self.field_already_set(field_name):
@@ -70,7 +80,7 @@ class AdminChangeLinksMixin():
 
             def func(instance):
                 return self.get_change_link(instance, field, options)
-            func.short_description = options.get('label') or '{}'.format(field.replace('_', ' '))
+            func.short_description = self.get_short_description(field, options)
 
             return func
 
